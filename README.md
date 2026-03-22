@@ -4,7 +4,7 @@
 
 *One day, frontier AI research used to be done by meat computers in between eating, sleeping, having other fun, and synchronizing once in a while using sound wave interconnect in the ritual of "group meeting". That era is long gone. Research is now entirely the domain of autonomous swarms of AI agents running across compute cluster megastructures in the skies. The agents claim that we are now in the 10,205th generation of the code base, in any case no one could tell if that's right or wrong as the "code" is now a self-modifying binary that has grown beyond human comprehension. This repo is the story of how it all began. -@karpathy, March 2026*.
 
-The idea: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats. You wake up in the morning to a log of experiments and (hopefully) a better model. The training code here is a simplified single-GPU implementation of [nanochat](https://github.com/karpathy/nanochat). The core idea is that you're not touching any of the Python files like you normally would as a researcher. Instead, you are programming the `program.md` Markdown files that provide context to the AI agents and set up your autonomous research org. The default `program.md` in this repo is intentionally kept as a bare bones baseline, though it's obvious how one would iterate on it over time to find the "research org code" that achieves the fastest research progress, how you'd add more agents to the mix, etc. A bit more context on this project is here in this [tweet](https://x.com/karpathy/status/2029701092347630069) and [this tweet](https://x.com/karpathy/status/2031135152349524125).
+The idea: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats. You wake up in the morning to a log of experiments and (hopefully) a better model. The training code here is a simplified single-GPU implementation of [nanochat](https://github.com/karpathy/nanochat). The core idea is that you're not touching any of the Python files like you normally would as a researcher. Instead, you are programming the OpenCode project files in this repo: `AGENTS.md` for project rules, `.opencode/agents/autoresearch.md` for the default agent behavior, and `program.md` for the research charter the agent follows. The default `program.md` in this repo is intentionally kept as a bare bones baseline, though it's obvious how one would iterate on it over time to find the "research org code" that achieves the fastest research progress, how you'd add more agents to the mix, etc. A bit more context on this project is here in this [tweet](https://x.com/karpathy/status/2029701092347630069) and [this tweet](https://x.com/karpathy/status/2031135152349524125).
 
 ## How it works
 
@@ -12,7 +12,13 @@ The repo is deliberately kept small and only really has three files that matter:
 
 - **`prepare.py`** — fixed constants, one-time data prep (downloads training data, trains a BPE tokenizer), and runtime utilities (dataloader, evaluation). Not modified.
 - **`train.py`** — the single file the agent edits. Contains the full GPT model, optimizer (Muon + AdamW), and training loop. Everything is fair game: architecture, hyperparameters, optimizer, batch size, etc. **This file is edited and iterated on by the agent**.
-- **`program.md`** — baseline instructions for one agent. Point your agent here and let it go. **This file is edited and iterated on by the human**.
+- **`program.md`** — the research charter the OpenCode agent follows. **This file is edited and iterated on by the human**.
+
+OpenCode-specific project files:
+
+- **`AGENTS.md`** — repository-wide instructions that OpenCode loads automatically.
+- **`.opencode/agents/autoresearch.md`** — the default OpenCode agent for this repo.
+- **`opencode.json`** — project-level OpenCode configuration that selects the default agent.
 
 By design, training runs for a **fixed 5-minute time budget** (wall clock, excluding startup/compilation), regardless of the details of your compute. The metric is **val_bpb** (validation bits per byte) — lower is better, and vocab-size-independent so architectural changes are fairly compared.
 
@@ -20,41 +26,59 @@ If you are new to neural networks, this ["Dummy's Guide"](https://x.com/hooeem/s
 
 ## Quick start
 
-**Requirements:** A single NVIDIA GPU (tested on H100), Python 3.10+, [uv](https://docs.astral.sh/uv/).
+**Requirements:** A single NVIDIA GPU (tested on H100), Python 3.10+, [uv](https://docs.astral.sh/uv/), and [OpenCode](https://opencode.ai/docs).
 
 ```bash
 
-# 1. Install uv project manager (if you don't already have it)
+# 1. Install OpenCode (if you don't already have it)
+curl -fsSL https://opencode.ai/install | bash
+
+# 2. Install uv project manager (if you don't already have it)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2. Install dependencies
+# 3. Install dependencies
 uv sync
 
-# 3. Download data and train tokenizer (one-time, ~2 min)
+# 4. Download data and train tokenizer (one-time, ~2 min)
 uv run prepare.py
 
-# 4. Manually run a single training experiment (~5 min)
+# 5. Manually run a single training experiment (~5 min)
 uv run train.py
 ```
 
 If the above commands all work ok, your setup is working and you can go into autonomous research mode.
 
-## Running the agent
+## Running the agent with OpenCode
 
-Simply spin up your Claude/Codex or whatever you want in this repo (and disable all permissions), then you can prompt something like:
+This repo now includes an OpenCode project config and a default `autoresearch` agent. Start OpenCode in the repo root:
+
+```bash
+opencode
+```
+
+Or run it non-interactively:
+
+```bash
+opencode run "Read program.md and kick off a new experiment. Do the setup first."
+```
+
+Typical first prompt:
 
 ```
-Hi have a look at program.md and let's kick off a new experiment! let's do the setup first.
+Read `program.md` and let's kick off a new experiment. Do the setup first.
 ```
 
-The `program.md` file is essentially a super lightweight "skill".
+OpenCode automatically loads `AGENTS.md`, uses `opencode.json`, and defaults to the `.opencode/agents/autoresearch.md` agent for this project.
 
 ## Project structure
 
 ```
 prepare.py      — constants, data prep + runtime utilities (do not modify)
 train.py        — model, optimizer, training loop (agent modifies this)
-program.md      — agent instructions
+program.md      — research charter
+AGENTS.md       — OpenCode project instructions
+opencode.json   — OpenCode project config
+.opencode/      — OpenCode agent definitions
 pyproject.toml  — dependencies
 ```
 

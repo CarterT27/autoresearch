@@ -2,6 +2,8 @@
 
 This is an experiment to have the LLM do its own research.
 
+OpenCode note: the default `.opencode/agents/autoresearch.md` agent reads this file and treats it as the experiment protocol for the repo.
+
 ## Setup
 
 To set up a new experiment, work with the user to:

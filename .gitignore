@@ -14,10 +14,15 @@ queue/
 
 # Agent prompt files (generated per-session by launchers)
 CLAUDE.md
-AGENTS.md
+
+# Track the checked-in OpenCode project config even if a global gitignore ignores it.
+!.opencode/
+!.opencode/agents/
+!.opencode/agents/*.md
 
 # Experimental code/artifacts
 dev/
+run.log
 
 # Results file
 results.tsv
